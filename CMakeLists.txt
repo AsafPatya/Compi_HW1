@@ -3,4 +3,4 @@ project(Compi_HW1)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Compi_HW1 main.cpp hw1.cpp token.hpp)
+add_executable(Compi_HW1 main.cpp hw1.cpp tokens.hpp scanner.lex)
