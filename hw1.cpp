@@ -2,7 +2,7 @@
 #include <iostream>
 #include "tokens.hpp"
 using namespace std;
-#define ERROR_TITLE "Error"
+
 
 //#define UNCLOSED_STRING_ERROR "Error unclosed string"
 //#define INVALID_ESCAPE_SEQUENCE_ERROR "Error undefined escape sequence"
@@ -35,21 +35,38 @@ using namespace std;
 //    return sequence;
 //}
 //
-void handleInvalidToken(const std::string& errorMessage, const bool printLexeme = true, const std::string& lexeme = yytext)
+void handleWrongChar()
 {
-    cout << errorMessage;
-    if (printLexeme) {
-        cout << " " << lexeme;
-    }
-    cout << std::endl;
+    const char* error_message = "ERROR";
+    const char* lexeme = yytext;
+    cout << error_message << " " << yytext <<  endl;
+
+    exit(0);
+}
+
+void handleStartWithZero()
+{
+    const char* error_message = "ERROR";
+    const char* lexeme = "0";
+    cout << error_message << " " << yytext <<  endl;
+
+    exit(0);
+}
+
+void handleLineEndedInMiddleString()
+{
+    const char* error_message = "Error unclosed string";
+    cout << error_message <<  endl;
+
     exit(0);
 }
 
 
-void printTokenComment(const int token)
+
+void printTokenComment()
 
 {
-    const char* currTokenName = tokenNames[token];
+    const char* currTokenName = tokenNames[COMMENT];
     const int lineNumber = yylineno;
     const char* commentLexeme = "\\";
     cout << lineNumber << " " << currTokenName << " " << commentLexeme << endl;
@@ -139,13 +156,13 @@ int main()
         switch (token)
         {
             case WRONG_CHAR:
-                handleInvalidToken(ERROR_TITLE);
+                handleWrongChar();
                 break;
-            case ZERO_FIRST:  // https://piazza.com/class/l0tou1nunya1jn?cid=20
-                handleInvalidToken(ERROR_TITLE, true, "0");
+            case STRART_WITH_ZERO:
+                handleStartWithZero();
                 break;
             case UNCLOSED_STRING:
-                handleInvalidToken(UNCLOSED_STRING_ERROR, false);
+                handleLineEndedInMiddleString();
                 break;
             case WHITESPACE:
                 break;
@@ -153,7 +170,7 @@ int main()
                 printStringToken();
                 break;
             case COMMENT:
-                printTokenComment(COMMENT);
+                printTokenComment();
                 break;
             default:
                 printToken(token);
