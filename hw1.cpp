@@ -133,6 +133,7 @@ void printToken(const int token)
 
 int main()
 {
+    int a;
     int token;
     while ((token = yylex()))
     {
