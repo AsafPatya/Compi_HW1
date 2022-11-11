@@ -81,71 +81,83 @@ void printToken(const int token)
     cout << lineNumber << " " << currTokenName << " " << lexeme << endl;
 
 }
-//
-//char handleEscapeSequence(int& escapeSequenceIndex)
-//{
-//    escapeSequenceIndex++;
-//    switch (yytext[escapeSequenceIndex])
-//    {
-//        case 'n':
-//            return '\n';
-//        case 'r':
-//            return '\r';
-//        case 't':
-//            return '\t';
-//        case '\\':
-//            return '\\';
-//        case '"':
-//            return '\"';
-//        case 'x':
-//        {
-//            std::string sequence = getEscapeSequence(escapeSequenceIndex);
-//            if (sequence.length() == 2 && isxdigit((int)yytext[escapeSequenceIndex + 1]) && isxdigit((int)yytext[escapeSequenceIndex + 2])) {  // check if the two following chars are hex
-//                char newChar = (char) std::stoi(sequence, nullptr, 16);
-//                escapeSequenceIndex += 2;
-//
-//                if (isPrintableChar(newChar)) {  // check if the given sequence is printable
-//                    return newChar;
-//                }
-//            }
-//
-//            handleInvalidToken(INVALID_ESCAPE_SEQUENCE_ERROR, true, "x" + sequence);  // the chars are not hex so print the sequence  // TODO- check the printable error
-//            return SKIP_CHAR;
-//        }
-//        default:  // invalid escape sequence
-//            handleInvalidToken(INVALID_ESCAPE_SEQUENCE_ERROR, true, std::string(yytext + escapeSequenceIndex, 1));
-//            return SKIP_CHAR;
-//    }
-//}
-//
-//void printStringToken()
-//{
-//    std::string stringLexeme;
-//    int stringIndex = 0;
-//    bool isNullInTheMiddle = false;
-//
-//    while (yytext[stringIndex] != 0) {
-//        char newChar = yytext[stringIndex];
-//
-//        if ((newChar == '\\' && yytext[stringIndex + 1] == '0') || (newChar == '\\' && yytext[stringIndex + 1] == 'x' && yytext[stringIndex + 2] == '0' && yytext[stringIndex + 3] == '0')) {  // https://piazza.com/class/l0tou1nunya1jn?cid=27
-//            isNullInTheMiddle = true;
-//        }
-//
-//        else if (newChar == '\\') {
-//            newChar = handleEscapeSequence(stringIndex);
-//
-//        } else if (newChar == '"') {  // this is the last char in the string
-//            printToken(STRING, stringLexeme);
-//            return;
-//        }
-//
-//        if (!isNullInTheMiddle) {
-//            stringLexeme.push_back(newChar);
-//        }
-//        stringIndex++;
-//    }
-//    handleInvalidToken(UNCLOSED_STRING_ERROR, false);
-//}
+
+char handleEscapeSequence(int& escape_seq_idx)
+{
+    std::string lexeme;
+    escape_seq_idx += 1U;
+    std::string arg(yytext + escape_seq_idx, 1);
+
+    char ch = yytext[escape_seq_idx];
+    if (ch == 'n') {
+        return '\n';
+    }
+    else if (ch == '"') {
+        return '\"';
+    }
+    else if (ch == '\t') {
+        return '\t';
+    }
+    else if (ch == '\\') {
+        return '\\';
+    }
+    else if (ch == 'r') {
+        return '\r';
+    }
+    else if (ch == 'x') {
+        std::string sequence = getEscapeSequence(escape_seq_idx);
+        if (sequence.length() == 2 &&
+            isxdigit((int)yytext[escape_seq_idx + 1]) &&
+            isxdigit((int)yytext[escape_seq_idx + 2])) {  // check if the two following chars are hex
+            char ch = (char) std::stoi(sequence, nullptr, 16);
+            escape_seq_idx += 2;
+
+            if (isPrintableChar(ch)) {  // check if the given sequence is printable
+                return ch;
+            }
+        }
+        arg = "x" + sequence;
+    }
+    handleInvalidToken(INVALID_ESCAPE_SEQUENCE_ERROR, true, arg, 1));
+    return SKIP_CHAR;
+}
+
+void printStringToken()
+{
+    std::string Lexeme;
+    std::string text(yytext);
+    u_int32_t   string_index = 0U;
+    bool        null_inside  = false;
+
+    while (true) {
+        if (text[stringIndex] != 0) {
+            break;
+        }
+
+        char ch = text[stringIndex];
+
+        if (text.substr(string_index, 2) == "\\0"
+            or text.substr(string_index, 4) == "\\x00") {
+            null_inside = true;
+        }
+
+        else if (ch == '"') {  // this is the last char in the string
+            printToken(STRING, Lexeme);
+            goto end;
+        }
+
+        ch = (ch == '\\')? escapeSequenceHandler(string_index) : ch;
+
+        if (not null_inside) {
+            Lexeme.push_back(ch);
+        }
+        string_index += 1U;
+    }
+    return handleInvalidToken(UNCLOSED_STRING_ERROR, false);
+
+end:
+    return;
+}
 
 
 int main()
