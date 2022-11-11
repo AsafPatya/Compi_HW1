@@ -55,11 +55,12 @@ void printTokenComment(const int token)
     cout << lineNumber << " " << currTokenName << " " << commentLexeme << endl;
 }
 
-void printToken(const int token, const std::string& lexeme = yytext)
+void printToken(const int token)
 
 {
     const char* currTokenName = tokenNames[token];
     const int lineNumber = yylineno;
+    const string lexeme = yytext;
     cout << lineNumber << " " << currTokenName << " " << lexeme << endl;
 
 }

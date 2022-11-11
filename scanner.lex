@@ -40,7 +40,7 @@ continue                                      return CONTINUE;
 =                                             return ASSIGN;
 ([<>]=?)|!=|==                                return RELOP;
 (\+|\-|\*|\/)                                 return BINOP;
-\/\/{no_new_line_chars}*                            return COMMENT;
+\/\/{no_new_line_chars}*                      return COMMENT;
 {letter}({letter}|{digit})*                   return ID;
 [1-9]{digit}*|0                               return NUM;
 [0]{digit}+                                   return ZERO_FIRST;
