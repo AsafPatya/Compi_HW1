@@ -4,43 +4,45 @@
 using namespace std;
 
 
-//#define UNCLOSED_STRING_ERROR "Error unclosed string"
-//#define INVALID_ESCAPE_SEQUENCE_ERROR "Error undefined escape sequence"
-//
-//const char SKIP_CHAR = '\0';
-//const char MIN_CHAR_BOUND = '\x00';  // TODO- check the range
-//const char MAX_CHAR_BOUND = '\x7f';
-//
-//bool isPrintableChar(char chr)
-//{
-//    return chr >= MIN_CHAR_BOUND && chr <= MAX_CHAR_BOUND;
-//}
-//
-//std::string getEscapeSequence(const int escapeSequenceIndex)
-//{
-//    std::string sequence;
-//    const char* const firstChar = yytext + escapeSequenceIndex + 1;
-//    char* secondChar = yytext + escapeSequenceIndex + 2;
-//
-//    if (firstChar != nullptr && *firstChar != '"') {
-//        sequence.push_back(*firstChar);
-//    } else {
-//        secondChar = nullptr;
-//    }
-//
-//    if (secondChar != nullptr && *secondChar != '"') {
-//        sequence.push_back(*secondChar);
-//    }
-//
-//    return sequence;
-//}
-//
+#define UNCLOSED_STRING_ERROR "Error unclosed string"
+#define INVALID_ESCAPE_SEQUENCE_ERROR "Error undefined escape sequence"
+
+const char SKIP_CHAR      = '\0';
+const char MIN_CHAR_BOUND = '\x00';
+const char MAX_CHAR_BOUND = '\x7f';
+
+bool isPrintableChar(char chr)
+{
+    return not(chr < MIN_CHAR_BOUND or chr > MAX_CHAR_BOUND);
+}
+
+std::string getEscapeSequence(const int escape_seq_idx)
+{
+    std::string sequence;
+    char* ch1 = yytext + escape_seq_idx + 1;
+    char* ch2 = ch1 + 1;
+
+    if (ch1 != nullptr and *ch1 != '"') {
+        sequence.push_back(*ch1);
+    }
+    else {
+        ch2 = nullptr;
+    }
+
+    if (ch2 != nullptr and *ch2 != '"') {
+        sequence.push_back(*ch2);
+    }
+
+    return sequence;
+}
+
+
+
 void handleWrongChar()
 {
     const char* error_message = "ERROR";
     const char* lexeme = yytext;
     cout << error_message << " " << yytext <<  endl;
-
     exit(0);
 }
 
@@ -49,7 +51,6 @@ void handleStartWithZero()
     const char* error_message = "ERROR";
     const char* lexeme = "0";
     cout << error_message << " " << yytext <<  endl;
-
     exit(0);
 }
 
@@ -57,11 +58,8 @@ void handleLineEndedInMiddleString()
 {
     const char* error_message = "Error unclosed string";
     cout << error_message <<  endl;
-
     exit(0);
 }
-
-
 
 void printTokenComment()
 
