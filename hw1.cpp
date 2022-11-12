@@ -3,8 +3,6 @@
 #include "tokens.hpp"
 using namespace std;
 
-
-#define UNCLOSED_STRING_ERROR "Error unclosed string"
 #define INVALID_ESCAPE_SEQUENCE_ERROR "Error undefined escape sequence"
 
 const char SKIP_CHAR      = '\0';
@@ -36,8 +34,6 @@ std::string getEscapeSequence(const int escape_seq_idx)
     return sequence;
 }
 
-
-
 void handleWrongChar()
 {
     const char* error_message = "ERROR";
@@ -62,29 +58,38 @@ void handleLineEndedInMiddleString()
 }
 
 void printTokenComment()
-
 {
     const char* currTokenName = tokenNames[COMMENT];
     const int lineNumber = yylineno;
-    const char* commentLexeme = "\\";
+    const char* commentLexeme = "//";
     cout << lineNumber << " " << currTokenName << " " << commentLexeme << endl;
 }
-
-void printToken(const int token)
+/*
+void printToken(const int token, bool is_string_token = false)
 
 {
-    const char* currTokenName = tokenNames[token];
-    const int lineNumber = yylineno;
-    const string lexeme = yytext;
-    cout << lineNumber << " " << currTokenName << " " << lexeme << endl;
+    const char*  currTokenName = tokenNames[token];
+    const int    lineNumber    = yylineno;
+    const string lexeme        = yytext;
+    if (is_string_token) {
+        cout << lineNumber << " " << currTokenName << " " << lexeme.substr(0, lexeme.length()-1) << endl;
+    }
+    else {
+        cout << lineNumber << " " << currTokenName << " " << lexeme << endl;
+    }
 
+} */
+
+void printTokenString(const int token, string input_str=yytext) {
+    const char*  currTokenName = tokenNames[token];
+    const int    lineNumber    = yylineno;
+    cout << lineNumber << " " << currTokenName << " " << input_str << endl;
 }
 
-char handleEscapeSequence(int& escape_seq_idx)
+char escapeSequenceHandler(int& escape_seq_idx)
 {
     std::string lexeme;
     escape_seq_idx += 1U;
-    std::string arg(yytext + escape_seq_idx, 1);
 
     char ch = yytext[escape_seq_idx];
     if (ch == 'n') {
@@ -93,7 +98,7 @@ char handleEscapeSequence(int& escape_seq_idx)
     else if (ch == '"') {
         return '\"';
     }
-    else if (ch == '\t') {
+    else if (ch == 't') {
         return '\t';
     }
     else if (ch == '\\') {
@@ -114,9 +119,8 @@ char handleEscapeSequence(int& escape_seq_idx)
                 return ch;
             }
         }
-        arg = "x" + sequence;
     }
-    handleInvalidToken(INVALID_ESCAPE_SEQUENCE_ERROR, true, arg, 1));
+    handleWrongChar();
     return SKIP_CHAR;
 }
 
@@ -124,34 +128,36 @@ void printStringToken()
 {
     std::string Lexeme;
     std::string text(yytext);
-    u_int32_t   string_index = 0U;
+    int         string_index = 0;
     bool        null_inside  = false;
 
     while (true) {
-        if (text[stringIndex] != 0) {
+        if (text[string_index] == 0) {
             break;
         }
 
-        char ch = text[stringIndex];
+        char ch = text[string_index];
 
         if (text.substr(string_index, 2) == "\\0"
             or text.substr(string_index, 4) == "\\x00") {
             null_inside = true;
         }
 
-        else if (ch == '"') {  // this is the last char in the string
-            printToken(STRING, Lexeme);
-            goto end;
+        else if (ch == '\\') {
+            ch = escapeSequenceHandler(string_index);
         }
 
-        ch = (ch == '\\')? escapeSequenceHandler(string_index) : ch;
+        else if (ch == '"') {  // this is the last char in the string
+            printTokenString(STRING, Lexeme);
+            goto end;
+        }
 
         if (not null_inside) {
             Lexeme.push_back(ch);
         }
         string_index += 1U;
     }
-    return handleInvalidToken(UNCLOSED_STRING_ERROR, false);
+    return handleLineEndedInMiddleString();
 
 end:
     return;
@@ -183,7 +189,7 @@ int main()
                 printTokenComment();
                 break;
             default:
-                printToken(token);
+                printTokenString(token);
                 break;
         }
     }
