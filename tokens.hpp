@@ -36,7 +36,7 @@ enum tokentype {
     WHITESPACE = 30,
     UNCLOSED_STRING = 31,
     WRONG_CHAR = 32,
-    STRART_WITH_ZERO = 33
+    ZERO_FIRST = 33
 };
 
 static const char* tokenNames[] = {
@@ -73,7 +73,7 @@ static const char* tokenNames[] = {
         "WHITESPACE",
         "UNCLOSED_STRING",
         "WRONG_CHAR",
-        "STRART_WITH_ZERO"
+        "ZERO_FIRST"
 };
 
 extern int yylineno;

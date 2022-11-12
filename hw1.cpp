@@ -1,38 +1,40 @@
 #include <string>
 #include <iostream>
 #include "tokens.hpp"
-using namespace std;
 
-#define INVALID_ESCAPE_SEQUENCE_ERROR "Error undefined escape sequence"
+#define COMMENT_LEXEME "//"
 
-const char SKIP_CHAR      = '\0';
-const char MIN_CHAR_BOUND = '\x00';
+const char SKIP_CHAR = '\0';
+const char MIN_CHAR_BOUND = '\x00';  // TODO- check the range
 const char MAX_CHAR_BOUND = '\x7f';
+
+using namespace std;
 
 bool isPrintableChar(char chr)
 {
-    return not(chr < MIN_CHAR_BOUND or chr > MAX_CHAR_BOUND);
+    return chr >= MIN_CHAR_BOUND && chr <= MAX_CHAR_BOUND;
 }
 
-std::string getEscapeSequence(const int escape_seq_idx)
+std::string getEscapeSequence(const int escapeSequenceIndex)
 {
     std::string sequence;
-    char* ch1 = yytext + escape_seq_idx + 1;
-    char* ch2 = ch1 + 1;
+    const char* const firstChar = yytext + escapeSequenceIndex + 1;
+    char* secondChar = yytext + escapeSequenceIndex + 2;
 
-    if (ch1 != nullptr and *ch1 != '"') {
-        sequence.push_back(*ch1);
-    }
-    else {
-        ch2 = nullptr;
+    if (firstChar != nullptr && *firstChar != '"') {
+        sequence.push_back(*firstChar);
+    } else {
+        secondChar = nullptr;
     }
 
-    if (ch2 != nullptr and *ch2 != '"') {
-        sequence.push_back(*ch2);
+    if (secondChar != nullptr && *secondChar != '"') {
+        sequence.push_back(*secondChar);
     }
 
     return sequence;
 }
+
+/// handles function - start
 
 void handleWrongChar()
 {
@@ -50,45 +52,33 @@ void handleStartWithZero()
     exit(0);
 }
 
-void handleLineEndedInMiddleString()
+void handleUnclosedString()
 {
     const char* error_message = "Error unclosed string";
     cout << error_message <<  endl;
     exit(0);
 }
 
-void printTokenComment()
+void handleInvalidEscapeSequenceError(const std::string& lexeme)
 {
-    const char* currTokenName = tokenNames[COMMENT];
-    const int lineNumber = yylineno;
-    const char* commentLexeme = "//";
-    cout << lineNumber << " " << currTokenName << " " << commentLexeme << endl;
+    // for handleEscapeSequence function
+    const char* error_message = "Error undefined escape sequence";
+    cout << error_message << " " << lexeme <<  endl;
+    exit(0);
 }
-/*
-void printToken(const int token, bool is_string_token = false)
 
+/// handles function - end
+
+
+
+
+void printTokenString(const int token, const std::string& lexeme = yytext)
 {
-    const char*  currTokenName = tokenNames[token];
-    const int    lineNumber    = yylineno;
-    const string lexeme        = yytext;
-    if (is_string_token) {
-        cout << lineNumber << " " << currTokenName << " " << lexeme.substr(0, lexeme.length()-1) << endl;
-    }
-    else {
-        cout << lineNumber << " " << currTokenName << " " << lexeme << endl;
-    }
-
-} */
-
-void printTokenString(const int token, string input_str=yytext) {
-    const char*  currTokenName = tokenNames[token];
-    const int    lineNumber    = yylineno;
-    cout << lineNumber << " " << currTokenName << " " << input_str << endl;
+    std::cout << yylineno << " " << tokenNames[token] << " " << lexeme << std::endl;
 }
 
 char escapeSequenceHandler(int& escape_seq_idx)
 {
-    std::string lexeme;
     escape_seq_idx += 1U;
 
     char ch = yytext[escape_seq_idx];
@@ -157,11 +147,12 @@ void printStringToken()
         }
         string_index += 1U;
     }
-    return handleLineEndedInMiddleString();
+    return handleUnclosedString();
 
 end:
     return;
 }
+
 
 
 int main()
@@ -172,25 +163,29 @@ int main()
         switch (token)
         {
             case WRONG_CHAR:
-                handleWrongChar();
+                handleWrongChar(); // changed V
                 break;
-            case STRART_WITH_ZERO:
-                handleStartWithZero();
+
+            case ZERO_FIRST:
+                handleStartWithZero();  // changed V
                 break;
-            case UNCLOSED_STRING:
-                handleLineEndedInMiddleString();
+
+            case UNCLOSED_STRING:  // changed V
+                handleUnclosedString();
                 break;
+
             case WHITESPACE:
                 break;
             case STRING:
                 printStringToken();
                 break;
             case COMMENT:
-                printTokenComment();
+                printTokenString(COMMENT, COMMENT_LEXEME);
                 break;
             default:
                 printTokenString(token);
                 break;
         }
     }
+    return 0;
 }
