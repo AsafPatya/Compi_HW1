@@ -39,7 +39,7 @@ enum tokentype {
     ZERO_FIRST = 33
 };
 
-static const char* tokenNames[] = {
+static const char* tokenNamesArray[] = {
         "",
         "VOID",
         "INT",

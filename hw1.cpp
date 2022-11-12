@@ -74,7 +74,7 @@ void handleInvalidEscapeSequenceError(const std::string& lexeme)
 
 void printTokenString(const int token, const std::string& lexeme = yytext)
 {
-    std::cout << yylineno << " " << tokenNames[token] << " " << lexeme << std::endl;
+    std::cout << yylineno << " " << tokenNamesArray[token] << " " << lexeme << std::endl;
 }
 
 char escapeSequenceHandler(int& escape_seq_idx)
