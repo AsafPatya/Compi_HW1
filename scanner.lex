@@ -8,7 +8,9 @@
 %option noyywrap
 digit   		                              ([0-9])
 letter  		                              ([a-zA-Z])
-printable_letters                             ([\x20-\x21\x23-\x7e]|((\\)(\\))|((\\)(\"))|((\\)(n))|((\\)(r))|((\\)(t))|((\\)x))
+printable_letters                             ([\x20-\x21\x23-\x7e]|((\\)(\\))|((\\)(\"))|printable_letters_tag)
+printable_letters_tag                         (((\)(n))|((\)(r))|((\)(t))|((\)x))
+
 whitespace                                    ([\t\n\r ])
 
 %x                                            STRING_START
