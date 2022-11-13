@@ -2,33 +2,32 @@
 #include <iostream>
 #include "tokens.hpp"
 
-#define COMMENT_LEXEME "//"
+#define COMMENT_LEX "//"
 
-const char SKIP_CHAR = '\0';
-const char MIN_CHAR_BOUND = '\x00';  // TODO- check the range
-const char MAX_CHAR_BOUND = '\x7f';
+const char SKIP_CHARACHTER = '\0';
+const char MINIMUM_CHAR_BOUND = '\x00';
+const char MAXIMUM_CHAR_BOUND = '\x7f';
 
 using namespace std;
 
-bool isPrintableChar(char chr)
+bool charInBound(char chr)
 {
-    return chr >= MIN_CHAR_BOUND && chr <= MAX_CHAR_BOUND;
+    bool res = not (chr < MINIMUM_CHAR_BOUND or chr > MAXIMUM_CHAR_BOUND);
+    return res;
 }
 
-std::string getEscapeSequence(const int escapeSequenceIndex)
+string getEscapeString(int esc_seq_idx)
 {
-    std::string sequence;
-    const char* const firstChar = yytext + escapeSequenceIndex + 1;
-    char* secondChar = yytext + escapeSequenceIndex + 2;
+    string sequence;
+    char firstChar  = (yytext != nullptr)? yytext[++esc_seq_idx] : '\0';
+    char secondChar = (yytext != nullptr)? yytext[++esc_seq_idx] : '\0';
 
-    if (firstChar != nullptr && *firstChar != '"') {
-        sequence.push_back(*firstChar);
-    } else {
-        secondChar = nullptr;
+    if (firstChar != '\0' and firstChar != '"') {
+        sequence.push_back(firstChar);
     }
 
-    if (secondChar != nullptr && *secondChar != '"') {
-        sequence.push_back(*secondChar);
+    if (secondChar != '\0' and secondChar != '"') {
+        sequence.push_back(secondChar);
     }
 
     return sequence;
@@ -39,7 +38,6 @@ std::string getEscapeSequence(const int escapeSequenceIndex)
 void handleWrongChar()
 {
     const char* error_message = "ERROR";
-    const char* lexeme = yytext;
     cout << error_message << " " << yytext <<  endl;
     exit(0);
 }
@@ -47,7 +45,6 @@ void handleWrongChar()
 void handleStartWithZero()
 {
     const char* error_message = "ERROR";
-    const char* lexeme = "0";
     cout << error_message << " " << yytext <<  endl;
     exit(0);
 }
@@ -59,7 +56,7 @@ void handleUnclosedString()
     exit(0);
 }
 
-void handleInvalidEscapeSequenceError(const std::string& lexeme)
+void handleInvalidEscapeSequenceError(const string& lexeme)
 {
     // for handleEscapeSequence function
     const char* error_message = "Error undefined escape sequence";
@@ -69,18 +66,14 @@ void handleInvalidEscapeSequenceError(const std::string& lexeme)
 
 /// handles function - end
 
-
-
-
-void printTokenString(const int token, const std::string& lexeme = yytext)
+void printTokenString(const int token, const string& lexeme = yytext)
 {
-    std::cout << yylineno << " " << tokenNamesArray[token] << " " << lexeme << std::endl;
+    cout << yylineno << " " << tokenNamesArray[token] << " " << lexeme << endl;
 }
 
 char escapeSequenceHandler(int& escape_seq_idx)
 {
     escape_seq_idx += 1U;
-
     char ch = yytext[escape_seq_idx];
     if (ch == 'n') {
         return '\n';
@@ -98,31 +91,31 @@ char escapeSequenceHandler(int& escape_seq_idx)
         return '\r';
     }
     else if (ch == 'x') {
-        std::string sequence = getEscapeSequence(escape_seq_idx);
-        if (sequence.length() == 2 &&
-            isxdigit((int)yytext[escape_seq_idx + 1]) &&
-            isxdigit((int)yytext[escape_seq_idx + 2])) {  // check if the two following chars are hex
-            char ch = (char) std::stoi(sequence, nullptr, 16);
+        string sequence = getEscapeString(escape_seq_idx);
+        if (sequence.length() == 2 and
+            isxdigit((int)yytext[escape_seq_idx + 1]) and
+            isxdigit((int)yytext[escape_seq_idx + 2])) {
+            char ch = (char) stoi(sequence, nullptr, 16);
             escape_seq_idx += 2;
 
-            if (isPrintableChar(ch)) {  // check if the given sequence is printable
+            if (charInBound(ch)) {
                 return ch;
             }
         }
     }
     handleWrongChar();
-    return SKIP_CHAR;
+    return SKIP_CHARACHTER;
 }
 
 void printStringToken()
 {
-    std::string Lexeme;
-    std::string text(yytext);
+    string Lexeme;
+    string text(yytext);
     int         string_index = 0;
     bool        null_inside  = false;
 
     while (true) {
-        if (text[string_index] == 0) {
+        if (text[string_index] == '\0') {
             break;
         }
 
@@ -137,7 +130,7 @@ void printStringToken()
             ch = escapeSequenceHandler(string_index);
         }
 
-        else if (ch == '"') {  // this is the last char in the string
+        else if (ch == '"') {
             printTokenString(STRING, Lexeme);
             goto end;
         }
@@ -153,38 +146,31 @@ end:
     return;
 }
 
-
-
 int main()
 {
     int token;
     while ((token = yylex()))
     {
-        switch (token)
-        {
-            case WRONG_CHAR:
-                handleWrongChar(); // changed V
-                break;
-
-            case ZERO_FIRST:
-                handleStartWithZero();  // changed V
-                break;
-
-            case UNCLOSED_STRING:  // changed V
-                handleUnclosedString();
-                break;
-
-            case WHITESPACE:
-                break;
-            case STRING:
-                printStringToken();
-                break;
-            case COMMENT:
-                printTokenString(COMMENT, COMMENT_LEXEME);
-                break;
-            default:
-                printTokenString(token);
-                break;
+        if (token == WRONG_CHAR) {
+            handleWrongChar();
+        }
+        else if (token == ZERO_FIRST) {
+            handleStartWithZero();
+        }
+        else if (token == UNCLOSED_STRING) {
+            handleUnclosedString();
+        }
+        else if (token == WHITESPACE) {
+            continue;
+        }
+        else if (token == STRING) {
+            printStringToken();
+        }
+        else if (token == COMMENT) {
+            printTokenString(COMMENT, COMMENT_LEX);
+        }
+        else {
+            printTokenString(token);
         }
     }
     return 0;
