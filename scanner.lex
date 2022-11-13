@@ -12,7 +12,7 @@ printable_letters                             ([\x20-\x21\x23-\x7e]|((\\)(\\))|(
 no_new_line                                   [\x00-\x09\x0b-\x0c\x0e-\x7f]
 whitespace                                    ([\t\n\r ])
 
-%x                                            START_STRING
+%x                                            STRING_START
 
 %%
 
@@ -32,26 +32,26 @@ else                                          return ELSE;
 while                                         return WHILE;
 break                                         return BREAK;
 continue                                      return CONTINUE;
-;                                             return SC;
-,                                             return COMMA;
-(\()                                          return LPAREN;
-(\))                                          return RPAREN;
-(\{)                                          return LBRACE;
-(\})                                          return RBRACE;
-=                                             return ASSIGN;
-([<>]=?)|!=|==                                return RELOP;
-(\+|\-|\*|\/)                                 return BINOP;
+";"                                             return SC;
+","                                             return COMMA;
+"("                                          return LPAREN;
+")"                                          return RPAREN;
+"{"                                         return LBRACE;
+"}"                                          return RBRACE;
+"="                                            return ASSIGN;
+"=="|"!="|"<"|">"|"<="|">="                             return RELOP;
+"+"|"-"|"*"|"/"	                              return BINOP;
 \/\/{no_new_line}*                            return COMMENT;
 {letter}({letter}|{digit})*                   return ID;
 [1-9]{digit}*|0                               return NUM;
 [0]{digit}+                                   return ZERO_FIRST;
 {whitespace}                                  return WHITESPACE;
 
-(\")                                          BEGIN(START_STRING);
-<START_STRING><<EOF>>                         return UNCLOSED_STRING;
-<START_STRING>{printable_letters}*(\")        { BEGIN(INITIAL); return STRING; }
-<START_STRING>([^(\")])*((\")?)               return UNCLOSED_STRING;
-<START_STRING>.                               return UNCLOSED_STRING;
+(\")                                          BEGIN(STRING_START);
+<STRING_START><<EOF>>                         return UNCLOSED_STRING;
+<STRING_START>{printable_letters}*(\")        { BEGIN(INITIAL); return STRING; }
+<STRING_START>([^(\")])*((\")?)               return UNCLOSED_STRING;
+<STRING_START>.                               return UNCLOSED_STRING;
 
 .                                             return WRONG_CHAR;
 %%
