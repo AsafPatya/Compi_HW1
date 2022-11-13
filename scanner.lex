@@ -9,7 +9,6 @@
 digit   		                              ([0-9])
 letter  		                              ([a-zA-Z])
 printable_letters                             ([\x20-\x21\x23-\x7e]|((\\)(\\))|((\\)(\"))|((\\)(n))|((\\)(r))|((\\)(t))|((\\)x))
-no_new_line                                   [\x00-\x09\x0b-\x0c\x0e-\x7f]
 whitespace                                    ([\t\n\r ])
 
 %x                                            STRING_START
@@ -42,8 +41,8 @@ continue                                      return CONTINUE;
 "=="|"!="|"<"|">"|"<="|">="                   return RELOP;
 "+"|"-"|"*"|"/"	                              return BINOP;
 \/\/[^\r\n]*                                  return COMMENT;
-{letter}({letter}|{digit})*                   return ID;
-[1-9]{digit}*|0                               return NUM;
+[a-zA-Z]+([0-9]|[a-zA-Z])*                    return ID;
+0|[1-9]+{digit}*                              return NUM;
 [0]{digit}+                                   return ZERO_FIRST;
 {whitespace}                                  return WHITESPACE;
 
